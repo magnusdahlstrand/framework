@@ -1,20 +1,23 @@
-function makeChangingArray(val, onChange) {
+
+// Creates an array whose mutating methods
+// have been overridden to notify of changes
+function makeChangingArray(val, changed) {
 	var arr = Object.create(val, {
 		push: {value: (...args) => {
 			val.push(...args);
-			onChange(arr);
+			changed();
 		}},
 		pop: {value: (...args) => {
 			val.pop(...args);
-			onChange(arr);
+			changed();
 		}},
 		shift: {value: (...args) => {
 			val.shift(...args);
-			onChange(arr);
+			changed();
 		}},
 		unshift: {value: (...args) => {
 			val.unshift(...args);
-			onChange(arr);
+			changed();
 		}},
 	});
 	return arr;
@@ -29,7 +32,10 @@ function makeChangingObject(state, onChange) {
 			}
 			var val = Reflect.get(obj, key);
 			if(val instanceof Array) {
-				deep[key] = makeChangingArray(val, (arr) => onChange(key, arr));
+				deep[key] = makeChangingArray(
+					val,
+					() => onChange(key, deep[key])
+				);
 				return deep[key];
 			}
 			return val;
