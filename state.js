@@ -1,3 +1,24 @@
+function makeChangingArray(val, onChange) {
+	var arr = Object.create(val, {
+		push: {value: (...args) => {
+			val.push(...args);
+			onChange(arr);
+		}},
+		pop: {value: (...args) => {
+			val.pop(...args);
+			onChange(arr);
+		}},
+		shift: {value: (...args) => {
+			val.shift(...args);
+			onChange(arr);
+		}},
+		unshift: {value: (...args) => {
+			val.unshift(...args);
+			onChange(arr);
+		}},
+	});
+	return arr;
+}
 
 // Provides an object which when has properties changed
 // emits a `change:$key` event, as well as a `change` event
@@ -16,8 +37,19 @@ module.exports = function stateMap(initial, emit) {
 		immediate = setImmediate(() =>
 			emit(`change`, proxy))
 	}
+	var deep = Object.create(null);
 	var proxy = new Proxy(state, {
-		get: Reflect.get,
+		get: (obj, key) => {
+			if(key in deep) {
+				return deep[key];
+			}
+			var val = Reflect.get(obj, key);
+			if(val instanceof Array) {
+				deep[key] = makeChangingArray(val, (arr) => onChange(key, arr));
+				return deep[key];
+			}
+			return val;
+		},
 		set: (obj, key, val) => {
 			if(state[key] !== val) {
 				state[key] = val;
