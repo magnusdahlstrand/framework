@@ -55,16 +55,17 @@ function makeChangingObject(state, onChange) {
 module.exports = function stateMap(initial, emit) {
 	var state = Object.assign({}, initial);
 	var immediate;
+	function send(key, val) {
+		return setImmediate(() => emit(key, val));
+	}
 	function onChange(key, val) {
 		// Try to limit the amount of `change` events which are triggered
 		// if multiple values are updated at the same time
 		clearImmediate(immediate);
 		// Per key
-		setImmediate(() =>
-			emit(`change:${key}`, val))
+		send(`change:${key}`, val);
 		// General
-		immediate = setImmediate(() =>
-			emit(`change`, proxy))
+		immediate = send(`change`, proxy)
 	}
 	var proxy = makeChangingObject(state, onChange);
 	return proxy;
