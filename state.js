@@ -1,4 +1,9 @@
 
+// Ensure we always send an array back
+function anArray(arr) {
+	return (arr instanceof Array ? arr : [arr]);
+}
+
 // Creates an array whose mutating methods
 // have been overridden to notify of changes
 function makeChangingArray(val, changed) {
@@ -23,6 +28,9 @@ function makeChangingArray(val, changed) {
 	return arr;
 }
 
+// Create a proxy object which wraps the input state
+// and triggers the onChange handler with a keypath
+// and associated values
 function makeChangingObject(state, onChange) {
 	var deep = Object.create(null);
 	return new Proxy(state, {
@@ -36,6 +44,18 @@ function makeChangingObject(state, onChange) {
 					val,
 					() => onChange(key, deep[key])
 				);
+				return deep[key];
+			}
+			else if(typeof val === 'object') {
+				deep[key] = makeChangingObject(val, (subkey, subval) => {
+					// deep[key] is proxied val
+					// We create a keypath (with associated values) which
+					// onChange uses to trigger events for each level
+					onChange(
+						[key, ...anArray(subkey)],
+						[deep[key], ...anArray(subval)]
+					)
+				});
 				return deep[key];
 			}
 			return val;
@@ -63,7 +83,20 @@ module.exports = function stateMap(initial, emit) {
 		// if multiple values are updated at the same time
 		clearImmediate(immediate);
 		// Per key
-		send(`change:${key}`, val);
+		if(key instanceof Array) {
+			var i = key.length - 1;
+			if(key.length !== val.length) {
+				throw new Error(`length of list of keys much match length of val list`);
+			}
+			do {
+				let keypath = key.join('.');
+				send(`change:${keypath}`, val[i]);
+			}
+			while(key.pop() && i--);
+		}
+		else {
+			send(`change:${key}`, val);
+		}
 		// General
 		immediate = send(`change`, proxy)
 	}
