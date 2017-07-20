@@ -1,3 +1,4 @@
+var tabs = /\t+/g;
 
 function refine(something) {
 	if(something instanceof Promise) {
@@ -14,7 +15,7 @@ function refine(something) {
 		return '';
 	}
 	if(typeof something === 'string') {
-		something.trim();
+		something.replace(tabs, '');
 	}
 	return something;
 }
