@@ -13,6 +13,9 @@ function refine(something) {
 	if(typeof something === 'undefined') {
 		return '';
 	}
+	if(typeof something === 'string') {
+		something.trim();
+	}
 	return something;
 }
 
