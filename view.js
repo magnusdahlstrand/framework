@@ -31,10 +31,17 @@ function component($template, events=null) {
 	})
 }
 
+function defrag(fragment) {
+	if(fragment instanceof DocumentFragment) {
+		return fragment.childNodes[0];
+	}
+	return fragment;
+}
+
 // Rendering
 function render(rootEl, $ui, state) {
 	$ui(state).then(content => {
-		morph(rootEl, content)
+		morph(rootEl, defrag(content))
 	})
 }
 
