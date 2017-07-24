@@ -59,7 +59,7 @@ function swapFragsForRefs(list) {
 			nodes.push(val);
 			return `${str}[fragment:${i}]`;
 		}
-		return '';
+		return str;
 	}, '');
 	return [str, nodes];
 }
